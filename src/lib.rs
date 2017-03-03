@@ -19,7 +19,7 @@ mod webplatform {
     pub use emscripten_asm_const_int;
 }
 
-trait Interop {
+pub trait Interop {
     fn as_int(self, _:&mut Vec<CString>) -> libc::c_int;
 }
 
