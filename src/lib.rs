@@ -82,7 +82,7 @@ impl<'a> fmt::Debug for HtmlNode<'a> {
 
 impl<'a> Drop for HtmlNode<'a> {
     fn drop(&mut self) {
-        println!("dropping HTML NODE {:?}", self.id);
+        js! { (self.id) b"WEBPLATFORM.rs_refs[$0] = null;\0" };
     }
 }
 
@@ -156,6 +156,10 @@ impl<'a> HtmlNode<'a> {
         js! { (self.id) b"\
             WEBPLATFORM.rs_refs[$0].focus();\
         \0" };
+    }
+
+    pub fn call(&self, fun: &str) {
+        js! { (self.id, fun) b"WEBPLATFORM.rs_refs[$0][UTF8ToString($1)]();\0" };
     }
 
     pub fn html_set(&self, s: &str) {
@@ -269,7 +273,7 @@ impl<'a> HtmlNode<'a> {
 
     pub fn prop_get_str(&self, s: &str) -> String {
         let a = js! { (self.id, s) b"\
-            var a = allocate(intArrayFromString(WEBPLATFORM.rs_refs[$0][UTF8ToString($1)]), 'i8', ALLOC_STACK); console.log(WEBPLATFORM.rs_refs[$0]); return a;\
+            var a = allocate(intArrayFromString(WEBPLATFORM.rs_refs[$0][UTF8ToString($1)]), 'i8', ALLOC_STACK); return a;\
         \0" };
         unsafe {
             str::from_utf8(CStr::from_ptr(a as *const libc::c_char).to_bytes()).unwrap().to_owned()
@@ -493,10 +497,7 @@ pub const LocalStorage: LocalStorageInterface = LocalStorageInterface;
 
 pub fn init<'a>() -> Document<'a> {
     js! { b"\
-        console.log('hi');\
-        window.WEBPLATFORM || (window.WEBPLATFORM = {\
-            rs_refs: [],\
-        });\
+        window.WEBPLATFORM || (window.WEBPLATFORM = { rs_refs: [] });\
     \0" };
     Document {
         refs: Rc::new(RefCell::new(Vec::new())),
